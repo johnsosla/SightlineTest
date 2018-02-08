@@ -239,6 +239,8 @@
 
         <apex:commandButton rendered="{!AND(OR(eo.ApprovalStatus__c = 'Submitted', eo.ApprovalStatus__c='Pending Approval'), eo.FlagForEscalate__c!=true)}" action="{!escalateApproval}" value="{!$Label.Escalate_Approval}" disabled="{!NOT(isAccessible)}"/>
         <apex:commandButton action="{!back}" value="{!$Label.Return_to_Project}" rendered="{!eo.OptedIn__c}"/>
+         
+
 
 </div>        
         
