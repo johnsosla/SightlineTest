@@ -1,0 +1,250 @@
+<apex:page standardController="EVMOptOut__c" extensions="ECO_EVMOptOutController" showheader="true" sidebar="false" standardstylesheets="true" action="{!init}">
+    <apex:includeScript value="{!$Resource.ECO_jQuery_1_11_2_min_js}"/>
+    <style>
+
+        .submitBox{
+            text-align:center;
+            width:300px;
+            margin:0 auto;
+            /*font-weight:bold;*/
+            font-size:14px;
+            padding:15px 20px 15px 20px;
+            border:2px solid #85B3CE;
+            background-color:#E3F0F8;
+            border-radius:5px;
+        }
+        .submitBox fieldset{
+            padding-left:17px;
+        }
+        .submitBox h2{
+            font-size:19px;
+        }  
+        .message{
+            padding: 7px;
+            border: 1px solid #85B3CE;
+            min-height: 30px;
+            display: block;
+            width: auto;
+            margin: 0 0 5px 0;
+            background-repeat: no-repeat;
+            border-radius: 4px;
+            background-color: #A2D3F1;
+
+        }          
+    
+    </style>
+
+    <apex:sectionHeader title="{!$Label.Earned_Value_Management_Opt_out_Request}" subtitle="{!project.Name}"/>
+    
+    <apex:messages styleClass="message"/>
+
+    <apex:form >
+
+    <script>
+    
+                  
+        var $j = jQuery.noConflict();
+        
+        $j(document).ready(function() {
+
+            //Hide Reassign link for Approval Process
+            var reassign;
+            $j( "a" ).each(function( index ) {
+               var href= $j( this ).attr("href");
+    
+               if (typeof href != 'undefined') {
+                   if (href.includes("REASSIGN")) {
+                       reassign = $j(this).parent();
+                       return false; //break
+                   }
+               }
+            });
+        
+            if (reassign != null)
+                reassign.html(reassign.children().eq(1));  
+            
+                  
+            // Determine which questions/answers to show/hide
+            evaluateAnswers();
+            enableOptIn();
+        });
+
+
+
+        function doIsRecommended(isRecommendedText, answerAboveText, requestexception, recommendation) {       
+            isRecommendedText.show(); 
+            answerAboveText.hide(); 
+            requestexception.toggleClass('btnDisabled', false).attr('disabled', null); 
+            recommendation.val("Recommended");       
+        }
+
+        function doNotRecommended(isRecommendedText, answerAboveText, requestexception, recommendation) {        
+             notRecommendedText.show(); 
+             answerAboveText.hide(); 
+             requestexception.toggleClass('btnDisabled', false).attr('disabled', null);        
+             recommendation.val("Not Recommended");       
+        } 
+ 
+        function evaluateAnswers() {
+
+            answers = [];
+
+            $j('input[id*="theRadio"]').each(function(){
+                if ($j(this).first().is(":checked")) {
+                    answers.push($j(this).first().attr('value'));
+                }
+            });
+            
+            isRecommendedText = $j('span[id*="isrecommended"]');
+            notRecommendedText = $j('span[id*="notrecommended"]');
+            answerAboveText = $j('span[id*="answerabove"]');
+            requestexception = $j('input[id*="requestexception"]');
+            submitapproval = $j('input[name="piSubmit"]'); 
+            recommendation = $j('input[id*="recommendation"]');
+
+            q1 = $j('span[id*="pbtable:0"]').parent().parent();
+            q2 = $j('span[id*="pbtable:1"]').parent().parent();
+            q3 = $j('span[id*="pbtable:2"]').parent().parent();
+            q4 = $j('span[id*="pbtable:3"]').parent().parent();
+
+            answerAboveText.show();
+            isRecommendedText.hide();
+            notRecommendedText.hide();
+            submitapproval.hide();
+            recommendation.val('');            
+            q2.hide();
+            q3.hide();
+            q4.hide();
+            requestexception.toggleClass('btnDisabled', true).attr('disabled', 'disabled');
+            
+            // Logic to determine which questions and text message gets displayed            
+            if (answers[0] == "No")                                                                     
+                { q2.show(); } 
+            if (answers[0] == "No" && answers[1] == "Yes")                                                                     
+                { q3.show(); }             
+            if (answers[0] == "No" && answers[1] == "Yes" && answers[2] == "Yes")                                                                     
+                { q4.show(); }             
+            
+            if (answers[0] == "Yes") 
+                doIsRecommended(isRecommendedText, answerAboveText, requestexception, recommendation);                                                                    
+            if (answers[0] == "No" && answers[1] == "No")  
+                doNotRecommended(isRecommendedText, answerAboveText, requestexception, recommendation);                                              
+            if (answers[0] == "No" && answers[1] == "Yes" && answers[2] == "No") 
+                doIsRecommended(isRecommendedText, answerAboveText, requestexception, recommendation);                         
+            if (answers[0] == "No" && answers[1] == "Yes" && answers[2] == "Yes" && answers[3] == "No")
+                doIsRecommended(isRecommendedText, answerAboveText, requestexception, recommendation);   
+            if (answers[0] == "No" && answers[1] == "Yes" && answers[2] == "Yes" && answers[3] == "Yes")
+                doNotRecommended(isRecommendedText, answerAboveText, requestexception, recommendation);  
+
+
+            if ("{!eo.ApprovalStatus__c}" == "Submitted" || "{!eo.ApprovalStatus__c}" == "Pending Approval" || "{!isReadOnly}" == "true")
+                requestexception.toggleClass('btnDisabled', true).attr('disabled', 'disabled');
+
+            if (!"{!eo.OptedIn__c}")
+                answerAboveText.hide();
+
+        }
+        
+        function enableOptIn(data) {
+           
+           optinenabled = $j('input[id*="optinenabled"]');
+           optindisabled = $j('input[id*="optindisabled"]');
+        
+           optindisabled.show();
+           optinenabled.hide();
+
+           if (("{!eo.OptInComments__c}"!="" || data.value!="") 
+                && ("{!eo.ApprovalStatus__c}" != "Submitted" || "{!eo.ApprovalStatus__c}" == "Pending Approval")
+                && "{!isAccessible}"=="true" && "{!isRequestOptinDisabled}"=="false") {
+               optindisabled.hide();
+               optinenabled.show();      
+           }
+
+        }
+
+    </script>   
+   
+        <apex:inputHidden id="recommendation" value="{!eo.Recommendation__c}" />
+        <apex:pageBlock title="" rendered="{!NOT(eo.OptedIn__c)}">
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!save}" value="Save" disabled="{!isReadOnly}"/>
+                <apex:commandButton action="{!back}" value="{!$Label.Return_to_Project}"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection collapsible="false" title="{!$Label.Earned_Value_Management_Opt_out_Request_Questions}" columns="1">
+                <apex:pageBlockTable id="pbtable" value="{!answers}" var="a">
+                        <apex:column style="width:75%" value="{!a.Answer.Question__c}"/>
+                        <!--<apex:column value="{!a.Answer.Answer__c}"/>-->                
+                        <apex:column >
+                            <apex:facet name="header">Answer</apex:facet>                   
+                            <apex:selectRadio id="theRadio" value="{!a.choice}" onchange="evaluateAnswers();" disabled="{!isReadOnly}">
+                                <apex:selectOptions value="{!a.Options}"/>
+                            </apex:selectRadio>                        
+                            <script>
+                                // Remove the underlines
+                                var selectOptionTable = document.getElementById('{!$Component.theRadio}');
+                                var cells = selectOptionTable.getElementsByTagName('td');
+                        
+                                for (var i=0,len=cells.length; i<len; i++){
+                                    cells[i].style.border = 'none' ;
+                                }
+                            </script>                        
+                    </apex:column> 
+                </apex:pageBlockTable>                
+            </apex:pageBlockSection>
+        </apex:pageBlock>        
+    <br/> 
+
+    <div class="submitBox" >
+        <h2>{!$Label.EVM_Opt_out_Recommendation}</h2>
+        <br/><br/>
+        <apex:outputPanel id="isrecommended" rendered="{!NOT(eo.IsEVMOptoutApproved__c)}">
+            <apex:outputText >
+                {!$Label.It_is_recommended}
+            </apex:outputText>
+        </apex:outputPanel>
+        <apex:outputPanel id="notrecommended" rendered="{!NOT(eo.IsEVMOptoutApproved__c)}">
+            <apex:outputText >
+                {!$Label.It_is_not_recommended}
+            </apex:outputText>
+        </apex:outputPanel>  
+        <apex:outputPanel id="answerabove" rendered="{!AND(NOT(eo.OptedIn__c), NOT(eo.IsEVMOptoutApproved__c))}">
+            <apex:outputText >
+                ({!$Label.answer_the_questions_above})
+            </apex:outputText>
+        </apex:outputPanel>  
+        <apex:outputPanel rendered="{!eo.IsEVMOptoutApproved__c}">
+            <apex:outputText >
+                {!$Label.The_request_to_be_exempt}
+            </apex:outputText>
+        </apex:outputPanel>  
+        <apex:outputPanel rendered="{!AND(eo.OptedIn__c, eo.ApprovalStatus__c='Approved')}">
+            <apex:outputText >
+                {!$Label.You_have_successfully_opted}
+            </apex:outputText>
+        </apex:outputPanel>  
+        <br/><br/>      
+
+        <apex:outputPanel rendered="{!eo.IsEVMOptoutApproved__c}">
+            <!--<apex:inputField value="{!eo.OptInComments__c}" style="width:300px;height:50px;" onkeyup="enableOptIn(this);"  rendered="{!eo.ApprovalStatus__c='Approved'}"/>     
+            <apex:inputField value="{!eo.OptInComments__c}" style="width:300px;height:50px;" onkeyup="enableOptIn(this);"  rendered="{!NOT(eo.ApprovalStatus__c='Approved')}" html-disabled="true"/>  -->  
+            <apex:inputField value="{!eo.OptInComments__c}" style="width:300px;height:50px;" onkeyup="enableOptIn(this);"  />   
+            <br/><br/>
+        </apex:outputPanel>
+
+        <apex:commandButton id="requestexception" rendered="{!AND(NOT(eo.IsEVMOptoutApproved__c), NOT(eo.OptedIn__c))}" action="{!submitApproval}" value="{!$Label.Request_Exception}" disabled="{!OR(OR(eo.ApprovalStatus__c='Submitted', eo.ApprovalStatus__c='Pending Approval'), isReadOnly)}"/> 
+
+        <apex:commandButton id="optinenabled" rendered="{!eo.IsEVMOptoutApproved__c}" action="{!optIn}" value="{!$Label.Request_Opt_in}" disabled="isReadOnly"/>
+
+        <apex:commandButton id="optindisabled" rendered="{!eo.IsEVMOptoutApproved__c}" value="{!$Label.Request_Opt_in}" disabled="true"/>    
+
+        <apex:commandButton rendered="{!AND(OR(eo.ApprovalStatus__c = 'Submitted', eo.ApprovalStatus__c='Pending Approval'), eo.FlagForEscalate__c!=true)}" action="{!escalateApproval}" value="{!$Label.Escalate_Approval}" disabled="{!NOT(isAccessible)}"/>
+        <apex:commandButton action="{!back}" value="{!$Label.Return_to_Project}" rendered="{!eo.OptedIn__c}"/>
+
+</div>        
+        
+    </apex:form>
+    
+    <br/><br/>
+    <apex:relatedList id="ApprovalHistory" list="ProcessSteps" />    
+    <c:ECO_GenericHistoryComponent recordLimit1="50" myObject1="{!EVMOptOut__c}" />
+</apex:page>
