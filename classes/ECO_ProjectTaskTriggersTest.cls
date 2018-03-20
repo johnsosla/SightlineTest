@@ -372,7 +372,7 @@ private class ECO_ProjectTaskTriggersTest {
         ECO_ProjectTaskTriggers.lockFieldsAfterOracleSync(tNew, tOldMap);
         ECO_ProjectTaskTriggers.lockFieldsAfterOracleSync(tNew, tOldMap);
         ECO_ProjectTaskTriggers.recalculateBudgets(tNew);
-        ECO_ProjectTaskTriggers.setProjectDates(tNew); 
+        ECO_ProjectTaskTriggers.setProjectDates(tNew);
         ECO_ProjectTaskTriggers.calculateEarnedValueSnaps(tNew, tOldMap, ets);
 
         // afters

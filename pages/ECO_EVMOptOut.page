@@ -19,24 +19,25 @@
         .submitBox h2{
             font-size:19px;
         }  
-        .message{
+        /*.message{
             padding: 7px;
-            border: 1px solid #85B3CE;
+            border: 1px solid red;//#85B3CE;
             min-height: 30px;
             display: block;
             width: auto;
             margin: 0 0 5px 0;
             background-repeat: no-repeat;
             border-radius: 4px;
-            background-color: #A2D3F1;
+            background-color: yellow;//#A2D3F1;
 
-        }          
+        }     */     
     
     </style>
 
     <apex:sectionHeader title="{!$Label.Earned_Value_Management_Opt_out_Request}" subtitle="{!project.Name}"/>
     
-    <apex:messages styleClass="message"/>
+    <!-- apex:messages styleClass="message"/ -->
+    <apex:pageMessages />
 
     <apex:form >
 
@@ -84,6 +85,9 @@
              requestexception.toggleClass('btnDisabled', false).attr('disabled', null);        
              recommendation.val("Not Recommended");       
         } 
+
+     
+
  
         function evaluateAnswers() {
 
@@ -163,13 +167,13 @@
         }
 
     </script>   
-   
         <apex:inputHidden id="recommendation" value="{!eo.Recommendation__c}" />
         <apex:pageBlock title="" rendered="{!NOT(eo.OptedIn__c)}">
             <apex:pageBlockButtons >
                 <apex:commandButton action="{!save}" value="Save" disabled="{!isReadOnly}"/>
                 <apex:commandButton action="{!back}" value="{!$Label.Return_to_Project}"/>
             </apex:pageBlockButtons>
+  
             <apex:pageBlockSection collapsible="false" title="{!$Label.Earned_Value_Management_Opt_out_Request_Questions}" columns="1">
                 <apex:pageBlockTable id="pbtable" value="{!answers}" var="a">
                         <apex:column style="width:75%" value="{!a.Answer.Question__c}"/>
@@ -236,10 +240,13 @@
         <apex:commandButton id="optinenabled" rendered="{!eo.IsEVMOptoutApproved__c}" action="{!optIn}" value="{!$Label.Request_Opt_in}" disabled="isReadOnly"/>
 
         <apex:commandButton id="optindisabled" rendered="{!eo.IsEVMOptoutApproved__c}" value="{!$Label.Request_Opt_in}" disabled="true"/>    
-
-        <apex:commandButton rendered="{!AND(OR(eo.ApprovalStatus__c = 'Submitted', eo.ApprovalStatus__c='Pending Approval'), eo.FlagForEscalate__c!=true)}" action="{!escalateApproval}" value="{!$Label.Escalate_Approval}" disabled="{!NOT(isAccessible)}"/>
+       
+       <apex:commandButton rendered="{!AND(OR(eo.ApprovalStatus__c = 'Submitted', eo.ApprovalStatus__c='Pending Approval'), eo.FlagForEscalate__c!=true)}" action="{!escalateApproval}" value="{!$Label.Escalate_Approval}" disabled="{!NOT(isAccessible)}"/> 
+     <!--UAT 474-->  <apex:commandButton rendered="{!AND(eo.ApprovalStatus__c = 'Rejected', eo.FlagForEscalate__c!=true)}" action="{!escalateApproval}" value="{!$Label.Escalate_Approval}" disabled="true"/> <!--UAT 474-->
         <apex:commandButton action="{!back}" value="{!$Label.Return_to_Project}" rendered="{!eo.OptedIn__c}"/>
-         
+
+      
+      
 
 
 </div>        

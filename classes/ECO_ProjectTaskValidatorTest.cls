@@ -147,14 +147,14 @@ private class ECO_ProjectTaskValidatorTest {
 
     private static testMethod void testTaskValidation_ChargeableOnlyAtLowestLevel(){        
         disableTriggers();
-
+        
         pse__Project_Task__c parenttask = new pse__Project_Task__c();
         parenttask.Name = 'top task';
         parenttask.pse__Project__c = createTestProject();
         parenttask.pse__Start_Date_Time__c = DateTime.now();
         parenttask.pse__End_Date_Time__c = DateTime.now().addDays(1);
         parenttask.pse__Status__c = 'Draft';
-        parenttask.FinancialTask__c = true;
+        parenttask.FinancialTask__c = false;
         insert parenttask;
 
         pse__Project_Task__c childTask1 = new pse__Project_Task__c();
@@ -174,9 +174,11 @@ private class ECO_ProjectTaskValidatorTest {
         childTask2.pse__Status__c = 'Draft';
         childTask2.FinancialTask__c = true;
         insert childTask2;*/
-
+        
         enableProjecTaskTrigger();
         Test.startTest();
+
+
         String expectedErrMsg = String.valueOf(System.Label.ECO_OracleTaskError_ChargeableAtLowestLevel).replace('##TASKNAME##', childTask1.Name); 
         String actualErrMsg = '';
         
@@ -190,8 +192,7 @@ private class ECO_ProjectTaskValidatorTest {
         Test.stopTest();
         system.assertEquals(false, actualErrMsg.contains(expectedErrMsg));
     }
-    
-    
+
     private static testMethod void testTaskValidation_PeersMustHaveSameFinancialSetting(){      
         disableTriggers();
         Boolean testBool = ECO_ProjectTaskValidator.isSyncedWithOracle('S');
@@ -220,7 +221,7 @@ private class ECO_ProjectTaskValidatorTest {
         childTask1.FinancialTask__c = true;
         insert childTask1;
 
-        /*pse__Project_Task__c childTask2 = new pse__Project_Task__c();
+        pse__Project_Task__c childTask2 = new pse__Project_Task__c();
         childTask2.Name = 'child2';
         childTask2.pse__Parent_Task__c = parenttask.Id;
         childTask2.pse__Start_Date_Time__c = DateTime.now();
@@ -228,9 +229,10 @@ private class ECO_ProjectTaskValidatorTest {
         childTask2.pse__Status__c = 'Draft';
         childTask2.FinancialTask__c = true;
         enableProjecTaskTrigger();
-        insert childTask2; */     
+        insert childTask2;      
         
         test.StartTest();
+
         String expectedErrMsg = String.valueOf(System.Label.ECO_OracleTaskError_PeerFinancial).replace('##TASKNAME##', childTask1.Name); 
         String actualErrMsg = '';
         
@@ -277,7 +279,7 @@ private class ECO_ProjectTaskValidatorTest {
             actualErrMsg = e.getMessage();
         }
         Test.stopTest();
-        //system.assertEquals(false, actualErrMsg.contains(expectedErrMsg));
+        system.assertEquals(false, actualErrMsg.contains(expectedErrMsg));
     }
 
     private static testMethod void testTaskValidation_NoDeleteOfSynced(){       
@@ -335,8 +337,7 @@ private class ECO_ProjectTaskValidatorTest {
         test.StartTest();
         childTask1.OracleSyncStatus__c = 'S';
         update childTask1;
-       
-        ECO_ProjectTaskValidator.validateForDelete(childTasks);
+
         
         pse__Project_Task__c childTask2 = new pse__Project_Task__c();
         childTask2.Name = 'child2';
